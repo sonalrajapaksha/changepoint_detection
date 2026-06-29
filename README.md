@@ -55,7 +55,7 @@ Run any detector:
 python changepoint_engine/pelt.py
 python changepoint_engine/particle.py
 python changepoint_engine/cusum.py
-python changepoint_engine/sliding_ttest.py
+python changepoint_engine/slidingttest.py
 ```
 
 Run full benchmark and save results:
