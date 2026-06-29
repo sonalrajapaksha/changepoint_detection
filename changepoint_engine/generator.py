@@ -4,7 +4,7 @@ import pyarrow.parquet as pq
 
 
 class SeriesGenerator:
-    def __init__(self, n_series: int = 100, length: int = 500, seed: int = 42):
+    def __init__(self, n_series: int = 1000, length: int = 500, seed: int = 42):
         self.n_series = n_series
         self.length = length
         self.rng = np.random.default_rng(seed)

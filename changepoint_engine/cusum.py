@@ -2,22 +2,6 @@ import numpy as np
 
 
 class CUSUM:
-    """
-    Cumulative Sum (CUSUM) control chart for online changepoint detection.
-
-    Maintains two statistics — one for upward shifts and one for downward
-    shifts — and flags a changepoint when either exceeds a threshold.
-
-    The CUSUM statistic accumulates evidence of a mean shift of magnitude
-    delta away from the target mean. It resets to zero after each detection.
-
-    Args:
-        target_mean: expected mean of the in-control process
-        delta: minimum shift magnitude to detect (in units of sigma)
-        sigma: estimated within-segment standard deviation
-        threshold: detection threshold (higher = fewer false positives)
-    """
-
     def __init__(
         self,
         target_mean: float = 0.0,
@@ -55,14 +39,6 @@ class CUSUM:
         return False
 
     def run(self, series: np.ndarray) -> tuple:
-        """
-        Run CUSUM over a full series.
-
-        Returns:
-            cp_flags: boolean array, True at detected changepoints
-            s_up: upward statistic at each timestep
-            s_down: downward statistic at each timestep
-        """
         T = len(series)
         cp_flags = np.zeros(T, dtype=bool)
         s_up = np.zeros(T)
@@ -79,10 +55,6 @@ class CUSUM:
 
 
 def detect(cp_flags: np.ndarray, min_gap: int = 20) -> list[int]:
-    """
-    Convert boolean flag array to list of changepoint indices,
-    enforcing a minimum gap between detections.
-    """
     cps = []
     for i, flag in enumerate(cp_flags):
         if not flag:

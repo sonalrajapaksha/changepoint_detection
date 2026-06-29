@@ -1,17 +1,37 @@
-# Bayesian online changepoint detection
+# Changepoint Detection Engine
 
-An implementation and benchmark of changepoint detection algorithms on synthetic time series, comparing online (BOCPD, particle filter) and offline (PELT, binary segmentation) approaches.
+A from-scratch implementation and empirical benchmark of four changepoint detection algorithms on synthetic time series. Compares offline methods (PELT, binary segmentation) against online methods (CUSUM, sliding t-test) across detection accuracy, lag, and false positive rate.
 
-## What this does
+---
 
-Given a time series, the goal is to detect when the underlying process changed. This project implements and rigorously compares four algorithms:
+## Algorithms
 
-- **BOCPD** — Bayesian Online Changepoint Detection. Processes data point-by-point, maintains a posterior over run length, outputs a changepoint probability at each step.
-- **Particle filter** — online, tracks multiple weighted hypotheses about run length and regime parameters simultaneously.
-- **PELT** — Pruned Exact Linear Time. Offline, finds the globally optimal segmentation via dynamic programming with pruning.
-- **Binary segmentation** — offline, greedy baseline that recursively splits the series at the single best changepoint.
+**Offline**
 
-All four are evaluated against a synthetic benchmark with known ground truth, across varying noise levels, shift magnitudes, and changepoint counts.
+- **PELT** — finds the globally optimal segmentation by minimising a penalised cost function via dynamic programming with pruning. Exact and O(n) in the number of changepoints.
+- **Binary segmentation** — greedy baseline that recursively splits the series at the single best changepoint. Not globally optimal but fast and interpretable.
+
+**Online**
+
+- **CUSUM** — accumulates evidence of a mean shift via two running statistics (upward and downward). Flags a changepoint when either exceeds a threshold and resets. O(1) per update.
+- **Sliding t-test** — maintains two adjacent windows of equal size and computes Welch's t-statistic between them at each step using O(1) running sum-of-squares accumulators. Flags a changepoint when the statistic exceeds a threshold.
+
+---
+
+## Results
+
+Evaluated on 1000 synthetic series of length 500 with 3 changepoints each, shift magnitude ~3 units, within-segment noise std ~1.5. Tolerance window of 20 steps.
+
+```
+algorithm                      f1    delay   fpr    recall
+------------------------------------------------------------
+pelt                        0.962     0.3   0.000   0.947
+binary_segmentation         0.937     0.4   0.000   0.913
+cusum                       0.846     5.0   0.161   0.897
+sliding_ttest               0.948    11.1   0.007   0.930
+```
+
+---
 
 ## Setup
 
@@ -23,21 +43,36 @@ pip install -r requirements.txt
 
 ## Usage
 
-Generate a benchmark dataset:
+Generate benchmark data:
 
 ```bash
 python changepoint_engine/generator.py
 ```
 
-This saves a Parquet file to `data/benchmark.parquet` containing synthetic series with known changepoint locations, noise levels, and shift magnitudes stored as columns.
+Run any detector:
+
+```bash
+python changepoint_engine/pelt.py
+python changepoint_engine/particle.py
+python changepoint_engine/cusum.py
+python changepoint_engine/sliding_ttest.py
+```
+
+Run full benchmark and save results:
+
+```bash
+python changepoint_engine/metrics.py
+```
+
+Query results with DuckDB:
+
+```python
+from metrics import query_results
+query_results("data/results_pelt.parquet", "f1 < 0.5")
+```
 
 Run tests:
 
 ```bash
 pytest tests/
 ```
-
-## Background
-
-- Killick, R., Fearnhead, P. and Eckley, I.A, [https://arxiv.org/pdf/1101.1438]
-- M. C. Jones, D. A. Henderson, [https://www.jstor.org/stable/20441430?]
